@@ -4,9 +4,12 @@ package com.commonsware.cwac.locpoll;
  * Created by Nelson Rodriguez on 01/12/2016.
  */
 
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -51,7 +54,11 @@ public class LocationPoller extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.d(LOGTAG,"LocationPoller fired by alarm manager!!!");
         Toast.makeText(context,"Alarm....",Toast.LENGTH_LONG).show();
+
+
+
         LocationPollerService.requestLocation(context, intent);
+
     }
 
 }
