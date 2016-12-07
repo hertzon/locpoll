@@ -12,13 +12,14 @@ import java.net.Socket;
 
 public class TCPClient {
     private String serverMessage;
-    public static final String SERVERIP = "104.236.203.72"; //your computer IP address
-    //public static final String SERVERIP = "107.170.62.116"; //your computer IP address
+    //public static final String SERVERIP = "104.236.203.72"; //your computer IP address
+    public static final String SERVERIP = "107.170.62.116"; //your computer IP address
     public static final int SERVERPORT = 31272;
     private OnMessageReceived mMessageListener = null;
     private boolean mRun = false;
     String LOGCAT="logueo";
     public boolean isConected=false;
+    public boolean error=false;
 
     PrintWriter out;
     BufferedReader in;
@@ -56,6 +57,7 @@ public class TCPClient {
             //create a socket to make the connection with the server
             Socket socket = new Socket(serverAddr, SERVERPORT);
 
+
             try {
 
                 //send the message to the server
@@ -69,6 +71,7 @@ public class TCPClient {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                 //in this while the client listens for the messages sent by the server
+                out.flush();
                 while (mRun) {
                     serverMessage = in.readLine();
 
@@ -98,6 +101,8 @@ public class TCPClient {
             } catch (Exception e) {
 
                 Log.d(LOGCAT, "S: Error", e);
+                error=true;
+
 
             } finally {
                 //the socket must be closed. It is not possible to reconnect to this socket

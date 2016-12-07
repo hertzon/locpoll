@@ -19,6 +19,8 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,6 +30,7 @@ import android.util.Log;
 import android.widget.Toast;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.commonsware.cwac.locpoll.LocationPoller;
 import com.commonsware.cwac.locpoll.LocationPollerResult;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -36,8 +39,9 @@ import static android.database.sqlite.SQLiteDatabase.openOrCreateDatabase;
 public class LocationReceiver extends BroadcastReceiver {
     String LOGTAG="logueo";
     static int velocidad=0;
-    private TCPClient mTcpClient;
-    private TCPClient mtcp;
+    public TCPClient mTcpClient;
+    boolean isLoad=false;
+    boolean redAntes=false;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -79,19 +83,34 @@ public class LocationReceiver extends BroadcastReceiver {
             if (msg==null) {
                 msg="Invalid broadcast received!";
             }
+            TelephonyManager tManager = (TelephonyManager)context.getSystemService(Service.TELEPHONY_SERVICE);
+            String imei = tManager.getDeviceId();
+            Log.i(LOGTAG,"imeiOnLocationReceiver: "+imei);
+
             Context applicationContext=LocationPollerDemo.getContextOfApplication();
             SharedPreferences preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
             Boolean isConected=preferences.getBoolean("isConected",false);
-
             if (isConected){
                 Log.i(LOGTAG,"Status:Conectado...");
             }else {
                 Log.i(LOGTAG,"Status:No Conectado...");
+//                if (mTcpClient==null) {
+//                    Log.i(LOGTAG, "Ejecutando mtcpcliente");
+//                    new connectTask().execute("");
+//                    try {
+//                        Thread.sleep(500);
+//                        mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+//                        Log.i(LOGTAG,"Esperando LOAD....");
+//
+//
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                        out.write(e.toString());
+//                    }
+//                }
             }
 
 
-
-            //Save in db
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String timestamp = sdf.format(new Date());
             double latitud=loc.getLatitude();
@@ -99,12 +118,10 @@ public class LocationReceiver extends BroadcastReceiver {
             double altitud=loc.getAltitude();
             velocidad=(int)(loc.getSpeed()/1000)*3600;
 
-            TelephonyManager tManager = (TelephonyManager)context.getSystemService(Service.TELEPHONY_SERVICE);
-            String imei = tManager.getDeviceId();
-            Log.i(LOGTAG,"imeiOnLocationReceiver: "+imei);
+
 
             String coordenadas=locacion_formateada(latitud,longitud);
-            Log.i(LOGTAG,"Locacion Formateada: "+coordenadas);
+            //Log.i(LOGTAG,"Locacion Formateada: "+coordenadas);
 
             Date d=new Date(System.currentTimeMillis());
             String  s= (String) DateFormat.format("dd/MM/yyyy HH:mm:ss", d.getTime());
@@ -117,19 +134,97 @@ public class LocationReceiver extends BroadcastReceiver {
             String segundo=s.substring(17, 19);
             String trama_pos="imei:"+imei+','+"tracker"+','+ano+mes+dia+hora+minuto+','+','+'F'+','+hora+minuto+segundo+".000"+','+'A'+','+coordenadas+','+velocidad+','+"0"+';';
             Log.i(LOGTAG,"Trama pos: "+trama_pos);
+            boolean hayRed=isNetwork();
+            //redAntes=hayRed;
+            Log.i(LOGTAG,"Hay red:???: "+hayRed);
 
-            if (isConected) {
+            if (hayRed){
+                //Leemos si antes no habia red
+//                applicationContext=LocationPollerDemo.getContextOfApplication();
+//                preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
+//                boolean reconectar=preferences.getBoolean("networkFail",false);
+//                if (reconectar){
+//                    LocationPollerDemo.getInstance().reconectar();
+//                    applicationContext=LocationPollerDemo.getContextOfApplication();
+//                    preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
+//                    SharedPreferences.Editor editor=preferences.edit();
+//                    editor.putBoolean("networkFail",false);
+//                    editor.commit();
+//                }
 
-                //new connectTask().execute("");
-                if (LocationPollerDemo.getInstance().mTcpClient != null) {
-                    Log.i(LOGTAG,"Sendinga data on LocationReceiver");
+
+
+                boolean isLOAD=LocationPollerDemo.getInstance().isLOAD;
+                Log.i(LOGTAG,"isLOAD de activity: "+isLOAD);
+                if (isLOAD){
                     LocationPollerDemo.getInstance().mTcpClient.sendMessage(trama_pos);
-
                 }else {
-                    Log.i(LOGTAG,"mtcp null");
+                    LocationPollerDemo.getInstance(). mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
                 }
 
+            }else {
+                //Si se cae la red es necesario reconectar
+                applicationContext=LocationPollerDemo.getContextOfApplication();
+                preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
+                SharedPreferences.Editor editor=preferences.edit();
+                editor.putBoolean("networkFail",true);
+                editor.commit();
+
             }
+
+
+
+            //////////////////////////////////////
+            if (mTcpClient != null) {
+                //mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+            }
+
+
+//            }else {
+//                Log.i(LOGTAG,"mTcpCLient no es null");
+//                //if (mTcpClient.isConected){
+//                    Log.i(LOGTAG,"Conectando a server...");
+//
+//                    try {
+//                        Thread.sleep(500);
+//                        mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+//
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    if (isConected){
+//                        Log.i(LOGTAG,"Status:Conectado...");
+//                    }else {
+//                        Log.i(LOGTAG,"Status:No Conectado...");
+//                    }
+//
+//            }
+
+
+
+
+
+
+
+
+
+
+
+//            if (isConected) {
+//
+//                //new connectTask().execute("");
+//                if (LocationPollerDemo.getInstance().mTcpClient != null) {
+//                    Log.i(LOGTAG,"Sending data on LocationReceiver");
+//                    //LocationPollerDemo.getInstance().mTcpClient.sendMessage(trama_pos);
+//                    Log.i(LOGTAG,"Enviando heartbeat");
+//                    //mTcpClient.sendMessage(imei+';');
+//
+//                }else {
+//                    Log.i(LOGTAG,"mtcp null");
+//                }
+//
+//            }
 
 
 
@@ -142,10 +237,10 @@ public class LocationReceiver extends BroadcastReceiver {
 
 
 
-            Log.d(LOGTAG,"Timestamp: "+timestamp+" Latitud: "+latitud+" Longitud: "+longitud+" Altitud: "+altitud+" GpsTime: "+gpsTime+" Velocidad: "+velocidad+" Bearing: "+bearing+" Nsatelites: "+nsatelites+" Provider: "+provider);
-            String output=timestamp+","+latitud+","+longitud+","+altitud+","+gpsTime+","+velocidad+","+bearing+","+nsatelites+","+provider;
-            Log.d(LOGTAG,"msg: "+msg+" nsatelites: "+nsatelites);
-            out.write(output);
+            //Log.d(LOGTAG,"Timestamp: "+timestamp+" Latitud: "+latitud+" Longitud: "+longitud+" Altitud: "+altitud+" GpsTime: "+gpsTime+" Velocidad: "+velocidad+" Bearing: "+bearing+" Nsatelites: "+nsatelites+" Provider: "+provider);
+            //String output=timestamp+","+latitud+","+longitud+","+altitud+","+gpsTime+","+velocidad+","+bearing+","+nsatelites+","+provider;
+            //Log.d(LOGTAG,"msg: "+msg+" nsatelites: "+nsatelites);
+            out.write(trama_pos);
             out.write("\n");
             out.close();
         }
@@ -202,37 +297,18 @@ public class LocationReceiver extends BroadcastReceiver {
                     + String.format("%8.5f", longitude) ;
         }
     }
-    public class connectTask extends AsyncTask<String,String,TCPClient> {
-
-        @Override
-        protected TCPClient doInBackground(String... message) {
-
-            //we create a TCPClient object and
-            mtcp = new TCPClient(new TCPClient.OnMessageReceived() {
-                @Override
-                //here the messageReceived method is implemented
-                public void messageReceived(String message) {
-                    //this method calls the onProgressUpdate
-                    publishProgress(message);
-                }
-            });
-            mtcp.run();
-
-            return null;
+    public  boolean isNetwork(){
+        //Determinamos si hay conectividad de red....
+        boolean isConnected=false;
+        Context applicationContext=LocationPollerDemo.getContextOfApplication();
+        ConnectivityManager cm =
+                (ConnectivityManager)applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork!=null){
+            isConnected = activeNetwork.isConnected();
+        }else {
+            isConnected=false;
         }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            Log.d(LOGTAG,"Rx en LocationReceiver: "+values[0]);
-
-            if (values[0].equals("LOAD")){
-                //SharedPreferences sharedPreferences=getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
-                //SharedPreferences.Editor editor=sharedPreferences.edit();
-                //editor.putBoolean("isConected",true);
-                //editor.commit();
-                //mTcpClient.stopClient();
-            }
-        }
+        return isConnected;
     }
 }

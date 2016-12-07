@@ -1,7 +1,11 @@
 package com.commonsware.cwac.locpoll.Demo;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,7 +38,7 @@ public class LocationPollerDemo extends AppCompatActivity {
 
     public static Context contextOfApplication;
 
-
+    public boolean isLOAD=false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,6 +47,13 @@ public class LocationPollerDemo extends AppCompatActivity {
         setContentView(R.layout.activity_location_poller_demo);
         mgr=(AlarmManager)getSystemService(ALARM_SERVICE);
         Log.d(LOGTAG,"Starting....");
+
+        registerReceiver(broadcastReceiver, new IntentFilter("INTERNET_LOST"));
+        registerReceiver(broadcastReceiverRecover, new IntentFilter("INTERNET_RECOVER"));
+
+
+
+
         Intent i=new Intent(this, LocationPoller.class);
 
         SharedPreferences sharedPreferences=getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
@@ -54,15 +65,19 @@ public class LocationPollerDemo extends AppCompatActivity {
 
         TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         String imei = tm.getDeviceId();
-        Log.d(LOGTAG,"IMEI: "+imei);
+        //Log.d(LOGTAG,"IMEI: "+imei);
         // connect to the server
-        new connectTask().execute("");
+        if (isNetwork()){
+            //Log.d(LOGTAG,"Conectando a Server");
+            //new connectTask().execute("");
+        }
+
         if (mTcpClient != null) {
             //mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
         }
         try {
             Thread.sleep(500);
-            mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+            //mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -108,6 +123,21 @@ public class LocationPollerDemo extends AppCompatActivity {
         mgr.cancel(pi);
         finish();
     }
+
+    public  boolean isNetwork(){
+        //Determinamos si hay conectividad de red....
+        boolean isConnected=false;
+        Context applicationContext=LocationPollerDemo.getContextOfApplication();
+        ConnectivityManager cm =
+                (ConnectivityManager)applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork!=null){
+            isConnected = activeNetwork.isConnected();
+        }else {
+            isConnected=false;
+        }
+        return isConnected;
+    }
     public class connectTask extends AsyncTask<String,String,TCPClient> {
 
         @Override
@@ -130,15 +160,62 @@ public class LocationPollerDemo extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-            Log.d(LOGTAG,"Rx: "+values[0]);
-
+            Log.d(LOGTAG,"Rx en LocationPollerDemo: "+values[0]);
             if (values[0].equals("LOAD")){
-                SharedPreferences sharedPreferences=getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
-                SharedPreferences.Editor editor=sharedPreferences.edit();
-                editor.putBoolean("isConected",true);
-                editor.commit();
-                //mTcpClient.stopClient();
+                Log.i(LOGTAG,"Llego LOAD");
+                isLOAD=true;
             }
+
+//            if (values[0].equals("LOAD")){
+//                Context applicationContext=LocationPollerDemo.getContextOfApplication();
+//                SharedPreferences sharedPreferences=applicationContext.getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
+//                SharedPreferences.Editor editor=sharedPreferences.edit();
+//                editor.putBoolean("isConected",true);
+//                editor.commit();
+//
+//                Log.i(LOGTAG,"Llego load!!!, parando cliente");
+//                isLoad=true;
+//                //mTcpClient.stopClient();
+//            }
+        }
+
+        @Override
+        protected void onPostExecute(TCPClient tcpClient) {
+            super.onPostExecute(tcpClient);
+//            if (isNetwork()){
+//                Log.d(LOGTAG,"ReConectando a Server");
+//                isLOAD=false;
+//                //new connectTask().execute("");
+//            }
         }
     }
+    public void reconectar(){
+        Log.d(LOGTAG,"ReConectando a Server...");
+        isLOAD=false;
+        new connectTask().execute("");
+    }
+    public void  desconectar(){
+        Log.d(LOGTAG,"Desconectando por falta de red!!!");
+        mTcpClient.stopClient();
+        mTcpClient.out.flush();
+    }
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // internet lost alert dialog method call from here...
+        }
+    };
+    BroadcastReceiver broadcastReceiverRecover = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // internet lost alert dialog method call from here...
+            try {
+                Thread.sleep(1000);
+                reconectar();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    };
 }
