@@ -14,8 +14,8 @@ import java.net.Socket;
 
 public class TCPClient {
     private String serverMessage;
-    public static final String SERVERIP = "104.236.203.72"; //your computer IP address
-    //public static final String SERVERIP = "107.170.62.116"; //your computer IP address
+    //public static final String SERVERIP = "104.236.203.72"; //your computer IP address
+    public static final String SERVERIP = "107.170.62.116"; //your computer IP address
     public static final int SERVERPORT = 31272;
     private OnMessageReceived mMessageListener = null;
     private boolean mRun = false;
@@ -36,6 +36,7 @@ public class TCPClient {
      * Sends the message entered by client to the server
      * @param message text entered by client
      */
+
     public void sendMessage(String message){
         if (out != null && !out.checkError()) {
             out.println(message);

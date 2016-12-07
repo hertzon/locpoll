@@ -49,6 +49,10 @@ public class LocationPollerDemo extends AppCompatActivity {
         instance = this;
         contextOfApplication = getApplicationContext();
         setContentView(R.layout.activity_location_poller_demo);
+
+        Thread.setDefaultUncaughtExceptionHandler(new CustomizedExceptionHandler("/mnt/sdcard/"));
+
+
         mgr=(AlarmManager)getSystemService(ALARM_SERVICE);
         Log.d(LOGTAG,"Starting....");
         registerReceiver(broadcastReceiver, new IntentFilter("INTERNET_LOST"));

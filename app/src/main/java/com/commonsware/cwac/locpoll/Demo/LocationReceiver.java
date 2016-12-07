@@ -89,26 +89,12 @@ public class LocationReceiver extends BroadcastReceiver {
 
             Context applicationContext=LocationPollerDemo.getContextOfApplication();
             SharedPreferences preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
-            Boolean isConected=preferences.getBoolean("isConected",false);
-            if (isConected){
-                Log.i(LOGTAG,"Status:Conectado...");
-            }else {
-                Log.i(LOGTAG,"Status:No Conectado...");
-//                if (mTcpClient==null) {
-//                    Log.i(LOGTAG, "Ejecutando mtcpcliente");
-//                    new connectTask().execute("");
-//                    try {
-//                        Thread.sleep(500);
-//                        mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
-//                        Log.i(LOGTAG,"Esperando LOAD....");
-//
-//
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                        out.write(e.toString());
-//                    }
-//                }
-            }
+            //Boolean isConected=preferences.getBoolean("isConected",false);
+//            if (isConected){
+//                Log.i(LOGTAG,"Status:Conectado...");
+//            }else {
+//                Log.i(LOGTAG,"Status:No Conectado...");
+//            }
 
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -311,4 +297,5 @@ public class LocationReceiver extends BroadcastReceiver {
         }
         return isConnected;
     }
+
 }
