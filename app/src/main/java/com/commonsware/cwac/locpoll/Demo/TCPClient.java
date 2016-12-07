@@ -6,14 +6,16 @@ package com.commonsware.cwac.locpoll.Demo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.widget.Toast;
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 
 public class TCPClient {
     private String serverMessage;
-    //public static final String SERVERIP = "104.236.203.72"; //your computer IP address
-    public static final String SERVERIP = "107.170.62.116"; //your computer IP address
+    public static final String SERVERIP = "104.236.203.72"; //your computer IP address
+    //public static final String SERVERIP = "107.170.62.116"; //your computer IP address
     public static final int SERVERPORT = 31272;
     private OnMessageReceived mMessageListener = null;
     private boolean mRun = false;
@@ -114,6 +116,8 @@ public class TCPClient {
         } catch (Exception e) {
 
             Log.d(LOGCAT, "C: Error", e);
+            Log.d(LOGCAT,"Error en servidor!!!");
+            //Toast.makeText(LocationPollerDemo.contextOfApplication,"Error en Servidor",Toast.LENGTH_LONG).show();
 
         }
 
