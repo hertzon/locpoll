@@ -75,6 +75,7 @@ public class LocationPollerDemo extends AppCompatActivity {
             editor.putBoolean("isConected",false);
             editor.commit();
             habiaRed=true;
+            Log.i(LOGTAG,"Conectado a server (1)");
             new connectTask().execute("");
             try {
                 Thread.sleep(500);
@@ -169,6 +170,9 @@ public class LocationPollerDemo extends AppCompatActivity {
 
 
             mTcpClient.run();
+            if (mTcpClient.error){
+                Log.i(LOGTAG,"Error proveniente de mTcpClient: "+mTcpClient.strError);
+            }
 
             return null;
         }
@@ -204,6 +208,10 @@ public class LocationPollerDemo extends AppCompatActivity {
         @Override
         protected void onPostExecute(TCPClient tcpClient) {
             super.onPostExecute(tcpClient);
+            Log.i(LOGTAG,"En postExecute");
+            if (mTcpClient.error){
+                Toast.makeText(LocationPollerDemo.this,"Error conecting server, please configure parameters!!",Toast.LENGTH_LONG).show();
+            }
 //            if (isNetwork()){
 //                Log.d(LOGTAG,"ReConectando a Server");
 //                isLOAD=false;

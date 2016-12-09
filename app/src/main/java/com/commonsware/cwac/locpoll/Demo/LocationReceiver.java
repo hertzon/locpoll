@@ -143,8 +143,10 @@ public class LocationReceiver extends BroadcastReceiver {
                 boolean isLOAD=LocationPollerDemo.getInstance().isLOAD;
                 Log.i(LOGTAG,"isLOAD de activity: "+isLOAD);
                 if (isLOAD){
+                    Log.i(LOGTAG,"Sendind timed pos data");
                     LocationPollerDemo.getInstance().mTcpClient.sendMessage(trama_pos);
                 }else {
+                    Log.i(LOGTAG,"Sendind initial data");
                     LocationPollerDemo.getInstance(). mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
                 }
 

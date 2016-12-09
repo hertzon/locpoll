@@ -14,14 +14,16 @@ import java.net.Socket;
 
 public class TCPClient {
     private String serverMessage;
-    //public static final String SERVERIP = "104.236.203.72"; //your computer IP address
-    public static final String SERVERIP = "107.170.62.116"; //your computer IP address
+    public static final String SERVERIP = "104.236.203.72"; //your computer IP address
+    //public static final String SERVERIP = "107.170.62.116"; //your computer IP address
     public static final int SERVERPORT = 31272;
     private OnMessageReceived mMessageListener = null;
     private boolean mRun = false;
     String LOGCAT="logueo";
     public boolean isConected=false;
     public boolean error=false;
+    public String strError=null;
+
 
     PrintWriter out;
     BufferedReader in;
@@ -104,6 +106,7 @@ public class TCPClient {
             } catch (Exception e) {
 
                 Log.d(LOGCAT, "S: Error", e);
+                strError=e.toString();
                 error=true;
 
 
@@ -118,6 +121,8 @@ public class TCPClient {
 
             Log.d(LOGCAT, "C: Error", e);
             Log.d(LOGCAT,"Error en servidor!!!");
+            error=true;
+            strError=e.toString();
             //Toast.makeText(LocationPollerDemo.contextOfApplication,"Error en Servidor",Toast.LENGTH_LONG).show();
 
         }
