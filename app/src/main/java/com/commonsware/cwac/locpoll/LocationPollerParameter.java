@@ -15,7 +15,8 @@ public class LocationPollerParameter {
     static final String PROVIDERS_KEY = KEY + "EXTRA_PROVIDERS";
     static final String TIMEOUT_KEY = KEY + "EXTRA_TIMEOUT";
 
-    private static final int DEFAULT_TIMEOUT = 120000; // two minutes
+    //private static final int DEFAULT_TIMEOUT = 120000; // two minutes
+    private static final int DEFAULT_TIMEOUT = 60000; // ONE minutes
 
     private Bundle bundle;
 

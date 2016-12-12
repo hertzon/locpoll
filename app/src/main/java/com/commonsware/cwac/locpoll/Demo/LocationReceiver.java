@@ -110,15 +110,19 @@ public class LocationReceiver extends BroadcastReceiver {
             //Log.i(LOGTAG,"Locacion Formateada: "+coordenadas);
 
             Date d=new Date(System.currentTimeMillis());
-            String  s= (String) DateFormat.format("dd/MM/yyyy HH:mm:ss", d.getTime());
+            String  s= null;
             s=GetUTCdatetimeAsString();
-            String ano=s.substring(0 ,4);
+            Log.i(LOGTAG,"UTC Date: "+s);
+            String ano=s.substring(2 ,4);
             String dia=s.substring(8,10);
             String mes=s.substring(5, 7);
             String hora=s.substring(11, 13);
             String minuto=s.substring(14, 16);
             String segundo=s.substring(17, 19);
-            String trama_pos="imei:"+imei+','+"tracker"+','+ano+mes+dia+hora+minuto+','+','+'F'+','+hora+minuto+segundo+".000"+','+'A'+','+coordenadas+','+velocidad+','+"0"+';';
+
+            String srtvelocidad="0.00";
+            String trama_pos="imei:"+imei+','+"tracker"+','+ano+mes+dia+hora+minuto+','+','+'F'+','+hora+minuto+segundo+".000"+','+'A'+','+coordenadas+','+srtvelocidad+','+"0"+';';
+            //String trama_pos="imei:"+imei+','+"tracker"+','+"161210230841"+','+','+'F'+','+hora+minuto+segundo+".000"+','+'A'+','+coordenadas+','+srtvelocidad+','+"0"+';';
             Log.i(LOGTAG,"Trama pos: "+trama_pos);
             boolean hayRed=isNetwork();
             //redAntes=hayRed;
@@ -144,9 +148,11 @@ public class LocationReceiver extends BroadcastReceiver {
                 Log.i(LOGTAG,"isLOAD de activity: "+isLOAD);
                 if (isLOAD){
                     Log.i(LOGTAG,"Sendind timed pos data");
+                    Log.i(LOGTAG,trama_pos);
                     LocationPollerDemo.getInstance().mTcpClient.sendMessage(trama_pos);
                 }else {
                     Log.i(LOGTAG,"Sendind initial data");
+                    Log.i(LOGTAG,"##"+"imei:"+imei+','+"A;");
                     LocationPollerDemo.getInstance(). mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
                 }
 

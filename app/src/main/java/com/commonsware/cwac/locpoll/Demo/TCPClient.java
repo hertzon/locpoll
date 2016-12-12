@@ -13,10 +13,11 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 public class TCPClient {
-    private String serverMessage;
+    private String serverMessage=null;
     public static final String SERVERIP = "104.236.203.72"; //your computer IP address
     //public static final String SERVERIP = "107.170.62.116"; //your computer IP address
     public static final int SERVERPORT = 31272;
+    //public static final int SERVERPORT = 37000;
     private OnMessageReceived mMessageListener = null;
     private boolean mRun = false;
     String LOGCAT="logueo";
@@ -78,11 +79,27 @@ public class TCPClient {
                 //in this while the client listens for the messages sent by the server
                 out.flush();
                 while (mRun) {
-                    serverMessage = in.readLine();
+                    //serverMessage = in.readLine();
+                    while (!in.ready()){
+
+                    }
+                    for (int i=0;i<4;i++){
+                        serverMessage = serverMessage+(char)in.read();
+                        //Log.i(LOGCAT,"llego caracter: "+serverMessage);
+                        if (serverMessage.equals("nullON")){
+                            break;
+                        }
+                    }
+
 
                     if (serverMessage != null && mMessageListener != null) {
                         //call the method messageReceived from MyActivity class
+                        Log.i(LOGCAT,"Rx en TCPCliente: "+serverMessage);
                         mMessageListener.messageReceived(serverMessage);
+                    }
+
+                    while (in.ready()){
+                        char trash=(char)in.read();
                     }
                     serverMessage = null;
 

@@ -23,6 +23,7 @@ import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 import com.commonsware.cwac.locpoll.LocationPoller;
 import com.commonsware.cwac.locpoll.LocationPollerParameter;
@@ -40,7 +41,10 @@ public class LocationPollerDemo extends AppCompatActivity {
     private static LocationPollerDemo instance;
     public static Context contextOfApplication;
     private boolean habiaRed=false;
-    String imei=null;
+    public String imei=null;
+    Button button_init;
+    public boolean isON=false;
+    public boolean isSendInit=false;
 
     public boolean isLOAD=false;
     @Override
@@ -49,18 +53,25 @@ public class LocationPollerDemo extends AppCompatActivity {
         instance = this;
         contextOfApplication = getApplicationContext();
         setContentView(R.layout.activity_location_poller_demo);
+        Log.d(LOGTAG,"Starting....");
+
+        button_init=(Button)findViewById(R.id.button_init);
 
         Thread.setDefaultUncaughtExceptionHandler(new CustomizedExceptionHandler("/mnt/sdcard/"));
 
 
         mgr=(AlarmManager)getSystemService(ALARM_SERVICE);
-        Log.d(LOGTAG,"Starting....");
+
         registerReceiver(broadcastReceiver, new IntentFilter("INTERNET_LOST"));
         registerReceiver(broadcastReceiverRecover, new IntentFilter("INTERNET_RECOVER"));
 
         TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         imei = tm.getDeviceId();
         Log.d(LOGTAG,"IMEI: "+imei);
+
+
+
+
 
         SharedPreferences sharedPreferences=getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
         SharedPreferences.Editor editor=sharedPreferences.edit();
@@ -70,40 +81,65 @@ public class LocationPollerDemo extends AppCompatActivity {
 
         Intent i=new Intent(this, LocationPoller.class);
 
-        if (isNetwork()){
-            Log.i(LOGTAG,"Hay Network");
-            editor.putBoolean("isConected",false);
-            editor.commit();
-            habiaRed=true;
-            Log.i(LOGTAG,"Conectado a server (1)");
-            new connectTask().execute("");
-            try {
-                Thread.sleep(500);
-                Log.i(LOGTAG,"Enviando inicial...");
-                mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+        button_init.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+            if (isNetwork()){
+                Log.i(LOGTAG,"Hay Network");
+                habiaRed=true;
+                Log.i(LOGTAG,"Conectado a server (1)");
+                if (mTcpClient==null){
+                    new connectTask().execute("");
+                }
+                try {
+                    Thread.sleep(500);
+                    Log.i(LOGTAG,"Enviando inicial...");//##imei:867721020736206,A
+                    mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
 
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }else {
+                Log.i(LOGTAG,"No Network");
             }
-        }else {
-            Log.i(LOGTAG,"No Network");
-        }
+
+            }
+        });
+
+//        if (isNetwork()){
+//            Log.i(LOGTAG,"Hay Network");
+//            editor.putBoolean("isConected",false);
+//            editor.commit();
+//            habiaRed=true;
+//            Log.i(LOGTAG,"Conectado a server (1)");
+//            new connectTask().execute("");
+//            try {
+//                Thread.sleep(500);
+//                Log.i(LOGTAG,"Enviando inicial...");
+//                mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+//
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }else {
+//            Log.i(LOGTAG,"No Network");
+//        }
 
 
 
         // connect to the server
 
-
-        if (mTcpClient != null) {
-            //mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
-        }
-        try {
-            Thread.sleep(500);
-            //mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//
+//        if (mTcpClient != null) {
+//            //mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+//        }
+//        try {
+//            Thread.sleep(500);
+//            //mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+//
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
 
 
@@ -180,29 +216,31 @@ public class LocationPollerDemo extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
-            Log.d(LOGTAG,"Rx en LocationPollerDemo: "+values[0]);
-            if (values[0].equals("LOAD") || values[0].equals("LOADLOAD")){
+            Log.d(LOGTAG,"Rx en LocationPollerDemo: "+values[0]);//nullLOAD
+
+            if (values[0].equals("nullON")){
+                Log.i(LOGTAG,"isON=true");
+                isON=true;
+            }
+
+            if (values[0].equals("LOAD") || values[0].equals("LOADLOAD")|| values[0].equals("nullLOAD")){
                 Log.i(LOGTAG,"Llego LOAD");
                 isLOAD=true;
                 SharedPreferences sharedPreferences=getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
                 SharedPreferences.Editor editor=sharedPreferences.edit();
                 editor.putBoolean("isLoad",true);
                 editor.commit();
-                Log.i(LOGTAG,"Arrancando alarmManager...");
-                mgr.setRepeating(AlarmManager.RTC_WAKEUP,SystemClock.elapsedRealtime(),PERIOD,pi);
-            }
 
-//            if (values[0].equals("LOAD")){
-//                Context applicationContext=LocationPollerDemo.getContextOfApplication();
-//                SharedPreferences sharedPreferences=applicationContext.getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
-//                SharedPreferences.Editor editor=sharedPreferences.edit();
-//                editor.putBoolean("isConected",true);
-//                editor.commit();
-//
-//                Log.i(LOGTAG,"Llego load!!!, parando cliente");
-//                isLoad=true;
-//                //mTcpClient.stopClient();
-//            }
+//                Log.i(LOGTAG,"enviando heartbeat (1)");
+//                if (mTcpClient!=null){
+//                    mTcpClient.sendMessage(imei+";");
+//                }
+
+
+                Log.i(LOGTAG,"Arrancando alarmManager...enviar posicion");
+                //mgr.setRepeating(AlarmManager.RTC_WAKEUP,SystemClock.elapsedRealtime(),PERIOD,pi);
+                arrancarAlarmanagerHeartBeat();
+            }
         }
 
         @Override
@@ -221,9 +259,6 @@ public class LocationPollerDemo extends AppCompatActivity {
     }
     public void reconectar(){
         Log.d(LOGTAG,"ReConectando a Server...");
-
-
-
         if (isNetwork()){
             SharedPreferences sharedPreferences=getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
             SharedPreferences.Editor editor=sharedPreferences.edit();
@@ -242,14 +277,62 @@ public class LocationPollerDemo extends AppCompatActivity {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
-
         }else {
             Log.i(LOGTAG,"No Network");
         }
         isLOAD=false;
 
     }
+    public  void arrancarAlarmanagerHeartBeat(){
+        //Arrancando alarm manager del heart beat
+        Log.i(LOGTAG,"Starting alarm manager para HeartBeat");
+        Intent intent=new Intent(this,HeartBeatReceiver.class);
+        PendingIntent pendingIntent=PendingIntent.getBroadcast(LocationPollerDemo.this,0,intent,0);
+        AlarmManager alarmManager=(AlarmManager)getSystemService(ALARM_SERVICE);
+        //setRepeating(AlarmManager.RTC_WAKEUP,SystemClock.elapsedRealtime(),PERIOD,pi);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,SystemClock.elapsedRealtime(),30*1000,pendingIntent);
+    }
+
+    public void sendHeartBeat(){
+        Log.i(LOGTAG,"enviando heartbeat (2)");
+        Log.i(LOGTAG,"imei: "+imei);
+
+        if (isSendInit){
+            if (isON){
+                Log.i(LOGTAG,"recibimos on");
+            }else {
+                Log.i(LOGTAG,"no recibimos on!!!!");
+            }
+        }
+
+
+
+
+        isON=false;
+        if (mTcpClient!=null){
+            mTcpClient.sendMessage(imei+";");
+            isSendInit=true;
+        }else {
+            Log.i(LOGTAG,"mTcpClient es null");
+        }
+//        try {
+//            Thread.sleep(2500);
+//
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        if (isON){
+//            //si recibimos on
+//            Log.i(LOGTAG,"recibimos on");
+//
+//
+//        }else {
+//            Log.i(LOGTAG,"no llego el on...desconectar y reconectar");
+//        }
+
+
+    }
+
     public void  desconectar(){
         Log.d(LOGTAG,"Desconectando por falta de red!!!");
         Log.i(LOGTAG,"Cancelando alarmanager");
