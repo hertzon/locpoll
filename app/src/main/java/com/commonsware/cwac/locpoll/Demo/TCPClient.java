@@ -80,7 +80,7 @@ public class TCPClient {
                 out.flush();
                 while (mRun) {
                     //serverMessage = in.readLine();
-                    while (!in.ready()){
+                    while (!in.ready() && mRun){
 
                     }
                     for (int i=0;i<4;i++){

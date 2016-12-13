@@ -54,11 +54,9 @@ public class LocationPollerDemo extends AppCompatActivity {
         contextOfApplication = getApplicationContext();
         setContentView(R.layout.activity_location_poller_demo);
         Log.d(LOGTAG,"Starting....");
-
         button_init=(Button)findViewById(R.id.button_init);
 
         Thread.setDefaultUncaughtExceptionHandler(new CustomizedExceptionHandler("/mnt/sdcard/"));
-
 
         mgr=(AlarmManager)getSystemService(ALARM_SERVICE);
 
@@ -68,10 +66,6 @@ public class LocationPollerDemo extends AppCompatActivity {
         TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         imei = tm.getDeviceId();
         Log.d(LOGTAG,"IMEI: "+imei);
-
-
-
-
 
         SharedPreferences sharedPreferences=getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
         SharedPreferences.Editor editor=sharedPreferences.edit();
@@ -95,6 +89,8 @@ public class LocationPollerDemo extends AppCompatActivity {
                     Thread.sleep(500);
                     Log.i(LOGTAG,"Enviando inicial...");//##imei:867721020736206,A
                     mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+                    Log.i(LOGTAG,"Arrancando alarmManager...enviar posicion");
+                    mgr.setRepeating(AlarmManager.RTC_WAKEUP,SystemClock.elapsedRealtime(),PERIOD,pi);
 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -190,10 +186,8 @@ public class LocationPollerDemo extends AppCompatActivity {
         return isConnected;
     }
     public class connectTask extends AsyncTask<String,String,TCPClient> {
-
         @Override
         protected TCPClient doInBackground(String... message) {
-
             //we create a TCPClient object and
             mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
                 @Override
@@ -203,13 +197,10 @@ public class LocationPollerDemo extends AppCompatActivity {
                     publishProgress(message);
                 }
             });
-
-
             mTcpClient.run();
             if (mTcpClient.error){
                 Log.i(LOGTAG,"Error proveniente de mTcpClient: "+mTcpClient.strError);
             }
-
             return null;
         }
 
@@ -237,9 +228,9 @@ public class LocationPollerDemo extends AppCompatActivity {
 //                }
 
 
-                Log.i(LOGTAG,"Arrancando alarmManager...enviar posicion");
+                //Log.i(LOGTAG,"Arrancando alarmManager...enviar posicion");
                 //mgr.setRepeating(AlarmManager.RTC_WAKEUP,SystemClock.elapsedRealtime(),PERIOD,pi);
-                arrancarAlarmanagerHeartBeat();
+                //arrancarAlarmanagerHeartBeat();
             }
         }
 
@@ -336,12 +327,12 @@ public class LocationPollerDemo extends AppCompatActivity {
     public void  desconectar(){
         Log.d(LOGTAG,"Desconectando por falta de red!!!");
         Log.i(LOGTAG,"Cancelando alarmanager");
-        mgr.cancel(pi);
+        //mgr.cancel(pi);
         if (mTcpClient!=null){
             mTcpClient.stopClient();
             mTcpClient.out.flush();
         }
-        mTcpClient=null;
+        //mTcpClient=null;
         SharedPreferences sharedPreferences=getSharedPreferences("AppPreferences",LocationPollerDemo.MODE_PRIVATE);
         SharedPreferences.Editor editor=sharedPreferences.edit();
         editor.putBoolean("isConected",false);

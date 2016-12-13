@@ -85,7 +85,7 @@ public class LocationReceiver extends BroadcastReceiver {
             }
             TelephonyManager tManager = (TelephonyManager)context.getSystemService(Service.TELEPHONY_SERVICE);
             String imei = tManager.getDeviceId();
-            Log.i(LOGTAG,"imeiOnLocationReceiver: "+imei);
+            //Log.i(LOGTAG,"imeiOnLocationReceiver: "+imei);
 
             Context applicationContext=LocationPollerDemo.getContextOfApplication();
             SharedPreferences preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
@@ -104,8 +104,6 @@ public class LocationReceiver extends BroadcastReceiver {
             double altitud=loc.getAltitude();
             velocidad=(int)(loc.getSpeed()/1000)*3600;
 
-
-
             String coordenadas=locacion_formateada(latitud,longitud);
             //Log.i(LOGTAG,"Locacion Formateada: "+coordenadas);
 
@@ -120,8 +118,8 @@ public class LocationReceiver extends BroadcastReceiver {
             String minuto=s.substring(14, 16);
             String segundo=s.substring(17, 19);
 
-            String srtvelocidad="0.00";
-            String trama_pos="imei:"+imei+','+"tracker"+','+ano+mes+dia+hora+minuto+','+','+'F'+','+hora+minuto+segundo+".000"+','+'A'+','+coordenadas+','+srtvelocidad+','+"0"+';';
+            //String srtvelocidad="0.00";
+            String trama_pos="imei:"+imei+','+"tracker"+','+ano+mes+dia+hora+minuto+','+','+'F'+','+hora+minuto+segundo+".000"+','+'A'+','+coordenadas+','+velocidad+','+"0"+';';
             //String trama_pos="imei:"+imei+','+"tracker"+','+"161210230841"+','+','+'F'+','+hora+minuto+segundo+".000"+','+'A'+','+coordenadas+','+srtvelocidad+','+"0"+';';
             Log.i(LOGTAG,"Trama pos: "+trama_pos);
             boolean hayRed=isNetwork();
@@ -129,32 +127,37 @@ public class LocationReceiver extends BroadcastReceiver {
             Log.i(LOGTAG,"Hay red:???: "+hayRed);
 
             if (hayRed){
-                //Leemos si antes no habia red
-//                applicationContext=LocationPollerDemo.getContextOfApplication();
-//                preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
-//                boolean reconectar=preferences.getBoolean("networkFail",false);
-//                if (reconectar){
-//                    LocationPollerDemo.getInstance().reconectar();
-//                    applicationContext=LocationPollerDemo.getContextOfApplication();
-//                    preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
-//                    SharedPreferences.Editor editor=preferences.edit();
-//                    editor.putBoolean("networkFail",false);
-//                    editor.commit();
-//                }
-
-
-
-                boolean isLOAD=LocationPollerDemo.getInstance().isLOAD;
-                Log.i(LOGTAG,"isLOAD de activity: "+isLOAD);
-                if (isLOAD){
-                    Log.i(LOGTAG,"Sendind timed pos data");
-                    Log.i(LOGTAG,trama_pos);
-                    LocationPollerDemo.getInstance().mTcpClient.sendMessage(trama_pos);
-                }else {
-                    Log.i(LOGTAG,"Sendind initial data");
-                    Log.i(LOGTAG,"##"+"imei:"+imei+','+"A;");
-                    LocationPollerDemo.getInstance(). mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+                LocationPollerDemo.getInstance().desconectar();
+                LocationPollerDemo.getInstance().reconectar();
+                LocationPollerDemo.getInstance().isLOAD=false;
+                Log.i(LOGTAG,"Sendind initial data");
+                Log.i(LOGTAG,"##"+"imei:"+imei+','+"A;");
+                LocationPollerDemo.getInstance(). mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+                try {
+                    Thread.sleep(2400);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+                LocationPollerDemo.getInstance().mTcpClient.sendMessage(trama_pos);
+                if (LocationPollerDemo.getInstance().isLOAD){
+                    Log.i(LOGTAG,"Se recibio is load...se envia pos..");
+                    //LocationPollerDemo.getInstance().mTcpClient.sendMessage(trama_pos);
+                }else {
+                    Log.i(LOGTAG,"no llego is load");
+                }
+
+//
+//                boolean isLOAD=LocationPollerDemo.getInstance().isLOAD;
+//                Log.i(LOGTAG,"isLOAD de activity: "+isLOAD);
+//                if (isLOAD){
+//                    Log.i(LOGTAG,"Sendind timed pos data");
+//                    Log.i(LOGTAG,trama_pos);
+//                    LocationPollerDemo.getInstance().mTcpClient.sendMessage(trama_pos);
+//                }else {
+//                    Log.i(LOGTAG,"Sendind initial data");
+//                    Log.i(LOGTAG,"##"+"imei:"+imei+','+"A;");
+//                    LocationPollerDemo.getInstance(). mTcpClient.sendMessage("##"+"imei:"+imei+','+"A;");
+//                }
 
             }else {
                 //Si se cae la red es necesario reconectar
