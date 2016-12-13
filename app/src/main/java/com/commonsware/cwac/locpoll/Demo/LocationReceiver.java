@@ -87,8 +87,8 @@ public class LocationReceiver extends BroadcastReceiver {
             String imei = tManager.getDeviceId();
             //Log.i(LOGTAG,"imeiOnLocationReceiver: "+imei);
 
-            Context applicationContext=LocationPollerDemo.getContextOfApplication();
-            SharedPreferences preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
+            //Context applicationContext=LocationPollerDemo.getContextOfApplication();
+            //SharedPreferences preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
             //Boolean isConected=preferences.getBoolean("isConected",false);
 //            if (isConected){
 //                Log.i(LOGTAG,"Status:Conectado...");
@@ -161,11 +161,11 @@ public class LocationReceiver extends BroadcastReceiver {
 
             }else {
                 //Si se cae la red es necesario reconectar
-                applicationContext=LocationPollerDemo.getContextOfApplication();
-                preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
-                SharedPreferences.Editor editor=preferences.edit();
-                editor.putBoolean("networkFail",true);
-                editor.commit();
+                //applicationContext=LocationPollerDemo.getContextOfApplication();
+                //preferences = applicationContext.getSharedPreferences("AppPreferences", LocationPollerDemo.MODE_PRIVATE);
+                //SharedPreferences.Editor editor=preferences.edit();
+               // editor.putBoolean("networkFail",true);
+                //editor.commit();
 
             }
 
